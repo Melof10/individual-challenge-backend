@@ -8,7 +8,15 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const { config } = require('./app/config/index');
+const db = require('./app/models');
+
+db.sequelize.sync({ force: false });
+
+const { config } = require('./app/config');
+
+const getRoutes = require('./app/routers');
+
+getRoutes(app);
 
 app.listen(config.port, function(){
     console.log(`Listening http://localhost:${config.port}`);
