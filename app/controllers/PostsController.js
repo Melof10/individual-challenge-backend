@@ -1,5 +1,6 @@
 const db = require('../models');
 const Post = db.posts;
+const urlValidate = require('../middleware/urlValidate');
 
 exports.findAll = (req, res) => {
     Post.findAll()
@@ -34,42 +35,82 @@ exports.create = (req, res) => {
         image: req.body.image,
         categoryId: req.body.categoryId,        
     }
+    
+    const result = urlValidate(req.body.image)
 
-    Post.create(post)
-    .then(data => {
-        res.send(data)
-    })
-    .catch(error => {
-        res.status(500).send({
-            errors: error.errors
+    if(result){
+        Post.create(post)
+        .then(data => {
+            res.send(data)
         })
-    });
+        .catch(error => {
+            res.status(500).send({
+                errors: error.errors
+            })
+        });
+    }else{
+        res.status(400).send({
+            message: 'Image does not exist'
+        });
+    }    
 }
 
 exports.update = (req, res) => {
-    const postId = req.params.id;
+    const postId = req.params.id;            
 
-    Post.update(req.body, {
-        where: {
-            id: postId
-        }
-    })
-    .then(num => {
-        if(num == 1){
-            res.send({
-                message: 'Post updated'
+    if(!req.body.image){
+        Post.update(req.body, {
+            where: {
+                id: postId
+            }
+        })
+        .then(num => {
+            if(num == 1){
+                res.send({
+                    message: 'Post updated'
+                })
+            }else{
+                res.send({
+                    message: 'Error'
+                })
+            }
+        })
+        .catch(error => {
+            res.status(500).send({
+                errors: error.errors
+            });
+        })
+    }else{
+        const result = urlValidate(req.body.image)
+
+        if(result){
+            Post.update(req.body, {
+                where: {
+                    id: postId
+                }
+            })
+            .then(num => {
+                if(num == 1){
+                    res.send({
+                        message: 'Post updated'
+                    })
+                }else{
+                    res.send({
+                        message: 'Error'
+                    })
+                }
+            })
+            .catch(error => {
+                res.status(500).send({
+                    errors: error.errors
+                });
             })
         }else{
-            res.send({
-                message: 'Error'
-            })
+            res.status(500).send({
+                message: 'Image does not exist'
+            });
         }
-    })
-    .catch(error => {
-        res.status(500).send({
-            errors: error.errors
-        });
-    })
+    }
 }
 
 exports.delete = (req, res) => {
